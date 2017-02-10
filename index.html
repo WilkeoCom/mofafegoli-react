@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Mofa</title>
+    <style>
+		.on { background: hotpink; }
+	</style>
+</head>
+
+<body>
+    <div id="root"></div>
+
+    <script src="libs/react.js"></script>
+    <script src="libs/react-dom.js"></script>
+    <script src="libs/mofafegoli.js"></script>
+    <script>
+        (function ({ Component, createElement: h }, ReactDOM, mofafegoli) {
+
+            var Form = function ({ onChange, convert, query }) {
+                var input = h('input', { onChange })
+                var output = h('output', null, convert(query))
+                return h('form', {}, input, output)
+            }
+
+            var createTh = item => h('th', { key: item }, item);
+
+            var Thead = function ({ vs }) {
+                var firstTh = h('th', { key: 'dummy' })
+                var ths = [firstTh, ...vs.map(createTh)];
+                //ths.splice(0, 0, firstTh);
+
+                return h('thead', null,
+                    h('tr', null, ths))
+            }
+
+            var createTd = cs => vs => h('td', {
+                key: vs,
+                className: isOn(cs + vs)
+            }, convert(vs, cs));
+
+            var Tbody = function ({ vs, cs, query, convert }) {
+                var q = isNaN(query) ? query : convert(query)
+
+                function isOn(syl) {
+                    return q.includes(syl) ? 'on' : null
+                }
+
+                var trs = []
+                for (var i = 0; i < cs.length; i++) {
+                    var firstTd = h('tr', { key: cs[i] }, tds);
+                    var tds = [firstTd, ...vs.map(createTd(cs[i]))];
+                }
+
+                return h('tbody', null, trs)
+            }
+
+            var Table = function (props) {
+                var { vs } = props
+                return h('table', null,
+                    h(Thead, { vs }),
+                    h(Tbody, props)
+                )
+            }
+
+            class App extends Component {
+                static propTypes = {
+                    cs: PropTypes.array.isRequired,
+                    vs: PropTypes.array.isRequired,
+                    convert: PropTypes.func.isRequired,
+                };
+
+                constructor(props) {
+                    // detail d'implémentation
+                    super(props)
+
+                    this.state = {
+                        query: ''
+                    }
+
+                    // chelou
+                    this.handleChange = this.handleChange.bind(this)
+                }
+
+                handleChange(evt) {
+                    this.setState({
+                        query: evt.target.value
+                    })
+                }
+
+                render() {
+                    var { convert, cs, vs } = this.props
+                    var { query } = this.state
+
+                    return h('div', null,
+                        h(Form, { convert, query, onChange: this.handleChange }),
+                        h(Table, {
+                            cs, vs, convert, query
+                        })
+                    )
+                }
+            }
+
+            ReactDOM.render(
+                h(App, {
+                    cs: mofafegoli.consonants,
+                    vs: mofafegoli.vowels,
+                    convert: mofafegoli.convert
+                }),
+                document.getElementById('root')
+            )
+        })(React, ReactDOM, mofafegoli)
+    </script>
+</body>
+
+</html>
